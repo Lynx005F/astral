@@ -1,6 +1,6 @@
 packages:
   ace:
-    revision: 67074011ee002014fa96ddcaa9ce28df3acebe2e
+    revision: ea2fc9ced5be964b47cfcbcd6eb6518771a9e85d
     version: null
     source:
       Git: https://github.com/pulp-platform/ace.git
@@ -29,8 +29,8 @@ packages:
     - apb
     - register_interface
   axi:
-    revision: 9402c8a9ce0a7b5253c3c29e788612d771e8b5d6
-    version: 0.39.3
+    revision: 587355b77b8ce94dcd600efbd5d5bd118ff913a7
+    version: 0.39.4
     source:
       Git: https://github.com/pulp-platform/axi.git
     dependencies:
@@ -53,7 +53,7 @@ packages:
     dependencies:
     - axi_slice
   axi_llc:
-    revision: 4deb8c6281c74b3882846ad933f42a8c6568cbe0
+    revision: 62079f9cc13e64d1ef131377aee6801eeef52642
     version: null
     source:
       Git: https://github.com/pulp-platform/axi_llc
@@ -61,6 +61,7 @@ packages:
     - axi
     - common_cells
     - common_verification
+    - redundancy_cells
     - register_interface
     - tech_cells_generic
   axi_obi:
@@ -120,7 +121,7 @@ packages:
       Git: https://github.com/AlSaqr-platform/can_bus.git
     dependencies: []
   cheshire:
-    revision: 997e02fad48be0d1c1e801a1553cc1c3fde8525a
+    revision: fb137e469e781528482be21fd4350c20817225c2
     version: null
     source:
       Git: https://github.com/pulp-platform/cheshire.git
@@ -143,6 +144,7 @@ packages:
     - redundancy_cells
     - register_interface
     - riscv-dbg
+    - riscv-iommu
     - serial_link
     - tagger
     - unbent
@@ -211,7 +213,7 @@ packages:
     - fpnew
     - tech_cells_generic
   cva6:
-    revision: 0baa33078c3e6c827fee4e7abef0a69737c27b3a
+    revision: a942d97573ef60a73fcb80ea7aa4d32b7c4d836a
     version: null
     source:
       Git: https://github.com/pulp-platform/cva6.git
@@ -220,6 +222,7 @@ packages:
     - axi
     - common_cells
     - fpnew
+    - redundancy_cells
     - tech_cells_generic
   dyn_mem:
     revision: 480590062742230dc9bd4050358a15b4747bdf34
@@ -315,8 +318,8 @@ packages:
       Git: https://github.com/pulp-platform/icache-intc.git
     dependencies: []
   idma:
-    revision: 95f366e56f7e772c283fb3c8b343afc4a3978375
-    version: 0.6.2
+    revision: c12caf59bb482fe44b27361f6924ad346b2d22fe
+    version: 0.6.3
     source:
       Git: https://github.com/pulp-platform/idma.git
     dependencies:
@@ -368,8 +371,8 @@ packages:
     - hwpe-stream
     - zeroriscy
   obi:
-    revision: 1aa411df145c4ebdd61f8fed4d003c33f7b20636
-    version: 0.1.2
+    revision: 5321106817e177d6c16ecc4daa922b96b1bc946b
+    version: 0.1.5
     source:
       Git: https://github.com/pulp-platform/obi.git
     dependencies:
@@ -453,7 +456,7 @@ packages:
     - hwpe-stream
     - tech_cells_generic
   redundancy_cells:
-    revision: 78aff2115bddcbb6970c37d19da50e6bc59e5c8a
+    revision: 9e31f7c6c24877eaf58279903e7a162b16c9a721
     version: null
     source:
       Git: https://github.com/pulp-platform/redundancy_cells.git
@@ -488,6 +491,15 @@ packages:
     dependencies:
     - common_cells
     - tech_cells_generic
+  riscv-iommu:
+    revision: c1dea3732d0d05e5659b31773e43f3364bc866fc
+    version: null
+    source:
+      Git: https://github.com/zero-day-labs/riscv-iommu.git
+    dependencies:
+    - axi
+    - common_cells
+    - register_interface
   safety_island:
     revision: aaef55c798ab53560faaf451a86668fa1e6d0f3b
     version: null
