@@ -83,8 +83,8 @@ packages:
     - common_cells
     - common_verification
   axi_rt:
-    revision: 2be9d4028cd3fd6617a0302a53212495a4c4e3fa
-    version: 0.0.0-alpha.4
+    revision: d5f857e74d0a5db4e4a2cc3652ca4f40f29a1484
+    version: 0.0.0-alpha.8
     source:
       Git: https://github.com/pulp-platform/axi_rt.git
     dependencies:
@@ -190,8 +190,8 @@ packages:
     dependencies:
     - hci
   common_cells:
-    revision: f4d6406070d8e7767e4e9a433f11b039859f03a1
-    version: null
+    revision: c27bce39ebb2e6bae52f60960814a2afca7bd4cb
+    version: 1.37.0
     source:
       Git: https://github.com/pulp-platform/common_cells.git
     dependencies:
@@ -260,8 +260,8 @@ packages:
     dependencies:
     - common_cells
   hci:
-    revision: d31af36ebcaf2196fb51676b40782aa8cbd9cc69
-    version: null
+    revision: afe0220f9a2f132dc8655c48da05aae5121a570b
+    version: 2.1.1
     source:
       Git: https://github.com/pulp-platform/hci.git
     dependencies:
@@ -379,7 +379,7 @@ packages:
     - common_cells
     - common_verification
   opentitan:
-    revision: faca6f28e20195e9b56eb822c58bec4a3a19dd4f
+    revision: 1466a339775f62ebec9fababe2859462bf9198b3
     version: null
     source:
       Git: https://github.com/pulp-platform/opentitan.git
@@ -405,13 +405,17 @@ packages:
     dependencies:
     - axi_slice
   pulp-ethernet:
-    revision: bdc8031ab270a49da28df269266ce9ab9a133636
+    revision: 1f8f1776ec494773f8e6c48e16685eb35d5f445e
     version: null
     source:
       Git: https://github.com/pulp-platform/pulp-ethernet.git
     dependencies:
     - axi
+    - axi_stream
+    - common_cells
     - common_verification
+    - idma
+    - register_interface
   pulp_cluster:
     revision: 2cd26c4923570ae81297c06078a0cfcded1e761c
     version: null

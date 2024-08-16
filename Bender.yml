@@ -18,15 +18,15 @@ dependencies:
   dyn_mem:            { git: https://github.com/pulp-platform/dyn_spm.git,              rev: 480590062742230dc9bd4050358a15b4747bdf34 } # branch: main
   safety_island:      { git: https://github.com/pulp-platform/safety_island.git,        rev: aaef55c798ab53560faaf451a86668fa1e6d0f3b } # branch: carfield
   pulp_cluster:       { git: https://github.com/pulp-platform/pulp_cluster.git,         rev: 2cd26c4923570ae81297c06078a0cfcded1e761c } # branch: astral
-  opentitan:          { git: https://github.com/pulp-platform/opentitan.git,            rev: faca6f28e20195e9b56eb822c58bec4a3a19dd4f } # branch: mc/astral
+  opentitan:          { git: https://github.com/pulp-platform/opentitan.git,            rev: 1466a339775f62ebec9fababe2859462bf9198b3 } # branch: mc/astral
   mailbox_unit:       { git: https://github.com/pulp-platform/mailbox_unit.git,         version: 1.1.0                                }
   apb:                { git: https://github.com/pulp-platform/apb.git,                  version: 0.2.3                                }
   timer_unit:         { git: https://github.com/pulp-platform/timer_unit.git,           version: 1.0.2                                }
   apb_adv_timer:      { git: https://github.com/pulp-platform/apb_adv_timer.git,        version: 1.0.4                                }
   can_bus:            { git: https://github.com/AlSaqr-platform/can_bus.git,            rev: 0ec0bf8b7dab6d5e4b3f7ec58338a8efee066379 } # branch: pulp
   spatz:              { git: https://github.com/pulp-platform/spatz.git,                rev: 98de97f24fe42675c9b4a8cc08354a03af57400a } # branch: yt/astral
-  common_cells:       { git: https://github.com/pulp-platform/common_cells.git,         rev: f4d6406070d8e7767e4e9a433f11b039859f03a1 } # branch: master
-  pulp-ethernet:      { git: https://github.com/pulp-platform/pulp-ethernet.git,        rev: bdc8031ab270a49da28df269266ce9ab9a133636 } # branch: carfield
+  common_cells:       { git: https://github.com/pulp-platform/common_cells.git,         version: 1.37.0                               } # branch: master
+  pulp-ethernet:      { git: https://github.com/pulp-platform/pulp-ethernet.git,        rev: 1f8f1776ec494773f8e6c48e16685eb35d5f445e } # branch: handshake
   riscv-dbg:          { git: https://github.com/pulp-platform/riscv-dbg.git,            version: =0.8.0                               }
 
 workspace:
@@ -91,6 +91,7 @@ sources:
   - hw/cheshire_wrap.sv
   - hw/hyperbus_wrap.sv
   - hw/l2_wrap.sv
+  - hw/ethernet_wrap.sv
   - hw/carfield_rstgen.sv
   # Level 2
   - hw/carfield.sv
@@ -121,6 +122,7 @@ sources:
     files:
       - tech/sourcecode/macros/rf_sp_uhse_rvt_mvt_128x40m2b1w0.v
       - tech/sourcecode/macros/rf_sp_uhse_rvt_mvt_256x32m2b1w1.v
+      - tech/sourcecode/macros/rf_sp_uhse_rvt_mvt_256x39m4b1w0.v
       - tech/sourcecode/macros/rf_sp_uhse_rvt_mvt_256x44m2b1w1.v
       - tech/sourcecode/macros/rf_sp_uhse_rvt_mvt_256x46m2b1w1.v
       - tech/sourcecode/macros/rf_sp_uhse_rvt_mvt_256x64m2b1w1.v
@@ -129,10 +131,10 @@ sources:
       - tech/sourcecode/macros/rf_sp_uhse_rvt_mvt_512x39m4b1w0.v
       - tech/sourcecode/macros/rf_sp_uhse_rvt_mvt_1024x64m4b1w1.v
       - tech/sourcecode/macros/rf_sp_uhse_rvt_mvt_128x264m1b1w0.v
+      - tech/sourcecode/macros/rf_sp_uhse_rvt_mvt_1024x39m4b1w0.v
       - tech/sourcecode/macros/sram_dp_hse_rvt_mvt_16384x8m16b8w1.v
       - tech/sourcecode/macros/sram_sp_hse_rvt_mvt_2560x76m4b4w0.v
       - tech/sourcecode/macros/sram_sp_hse_rvt_mvt_4096x76m4b4w0.v
-      - tech/sourcecode/tc_clk.sv
       - tech/sourcecode/tc_sram.sv
 
   - target: all(xilinx, fpga, xilinx_vanilla)
