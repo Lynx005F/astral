@@ -11,15 +11,15 @@ import cheshire_pkg::*;
  * AXI Configuration *
  ********************/
 //L2, port 0
-localparam bit     L2Port0Enable = 1;
+localparam bit     L2Port0Enable = 0;
 localparam doub_bt L2Port0Base = 'h78000000;
 localparam doub_bt L2Port0Size = 'h00200000;
 // L2, port 1
-localparam bit     L2Port1Enable = 1;
+localparam bit     L2Port1Enable = 0;
 localparam doub_bt L2Port1Base = L2Port0Base + L2Port0Size;
 localparam doub_bt L2Port1Size = L2Port0Size;
 // Safety Island
-localparam bit     SafetyIslandEnable = 1;
+localparam bit     SafetyIslandEnable = 0;
 localparam doub_bt SafetyIslandBase = 'h60000000;
 localparam doub_bt SafetyIslandSize = 'h00800000;
 // Ethernet
@@ -31,15 +31,15 @@ localparam bit     PeriphEnable = 1;
 localparam doub_bt PeriphBase = 'h20001000;
 localparam doub_bt PeriphSize = 'h00009000;
 // Spatz cluster
-localparam bit     SpatzClusterEnable = 1;
+localparam bit     SpatzClusterEnable = 0;
 localparam doub_bt SpatzClusterBase = 'h51000000;
 localparam doub_bt SpatzClusterSize = 'h00800000;
 // PULP cluster
-localparam bit     PulpClusterEnable = 1;
+localparam bit     PulpClusterEnable = 0;
 localparam doub_bt PulpClusterBase = 'h50000000;
 localparam doub_bt PulpClusterSize = 'h00800000;
 // Security Island
-localparam bit     SecurityIslandEnable = 1;
+localparam bit     SecurityIslandEnable = 0;
 localparam doub_bt SecurityIslandBase = 'h0;
 localparam doub_bt SecurityIslandSize = 'h0;
 // Mailbox
@@ -65,6 +65,18 @@ localparam doub_bt SystemWatchdogSize = 'h00001000;
 // Hyperbus Config
 localparam doub_bt HyperBusBase = 'h20009000;
 localparam doub_bt HyperBusSize = 'h00001000;
+// Streamer
+localparam bit StreamerEnable = 0;
+localparam doub_bt StreamerCfgBase = 'h20009000;
+localparam doub_bt StreamerCfgSize = 'h00008000;
+localparam doub_bt StreamerApbBase = StreamerCfgBase + StreamerCfgSize;
+localparam doub_bt StreamerApbSize = 'h00008000;
+// SpaceWire
+localparam bit SpaceWireEnable = 0;
+localparam doub_bt SpaceWireRegBase = 'h20019000;
+localparam doub_bt SpaceWireRegSize = 'h00000100;
+localparam doub_bt SpaceWireApbBase = SpaceWireRegBase + SpaceWireRegSize;
+localparam doub_bt SpaceWireApbSize = 'h00000F00;
 /************************
  * RegBus Configuration *
  ***********************/

@@ -7,7 +7,7 @@
 ## @section Carfield platform simulation
 
 QUESTA ?= questa-2023.4
-TBENCH ?= tb_carfield_soc
+TBENCH ?= tb_astral
 
 ## Get HyperRAM verification IP (VIP) for simulation
 $(CAR_TGT_DIR)/sim/src/hyp_vip:
@@ -35,6 +35,9 @@ RUNTIME_DEFINES := +define+HYP_USER_PRELOAD="$(HYP_USER_PRELOAD)"
 RUNTIME_DEFINES += +define+HYP0_PRELOAD_MEM_FILE=\"$(HYP0_PRELOAD_MEM_FILE)\"
 RUNTIME_DEFINES += +define+HYP1_PRELOAD_MEM_FILE=\"$(HYP1_PRELOAD_MEM_FILE)\"
 
+TASI_LIB += vlib $ROOT/working_dir/streamer/TASI_generic_Lib
+TASI_LIB += vmap TASI_generic_Lib $ROOT/working_dir/streamer/TASI_generic_Lib
+
 #############
 # Questasim #
 #############
@@ -42,6 +45,10 @@ RUNTIME_DEFINES += +define+HYP1_PRELOAD_MEM_FILE=\"$(HYP1_PRELOAD_MEM_FILE)\"
 ## @section Questasim simulator target
 
 QUESTA_FLAGS := -permissive -suppress 3009 -suppress 8386 -error 7 +UVM_NO_RELNOTES
+
+## TODO: this is a workaround to enable simulations with Thales IP! Fix this!
+QUESTA_FLAGS += -suppress 1565
+
 ifeq ($(TECH_SIM), 1)
 	# Technological memory macros have the checks on hold/setup violations encapsulated
 	# within a 'specify' Questa directive. For this reason, to run simulations of the
@@ -52,6 +59,8 @@ ifeq ($(TECH_SIM), 1)
 	QUESTA_FLAGS += +nospecify
 	QUESTA_FLAGS += -sdfnoerror
 	QUESTA_FLAGS += -suppress 13271
+## TODO: this is a workaround to suppress sdf error! Fix it!
+	QUESTA_FLAGS += -sdfnoerror
 endif
 ifdef DEBUG
 	VOPT_FLAGS := $(QUESTA_FLAGS) +acc
@@ -66,6 +75,12 @@ endif
 .PHONY: $(CAR_VSIM_DIR)/compile.carfield_soc.tcl
 $(CAR_VSIM_DIR)/compile.carfield_soc.tcl:
 	$(BENDER) script vsim $(common_targs) $(sim_targs) $(sim_defs) $(common_defs) $(safed_defs) --vlog-arg="$(RUNTIME_DEFINES)" --compilation-mode separate > $@
+	sed -i '2a\
+	set VsimDir "$(CAR_VSIM_DIR)"\
+	set TCTMPATH "$(STREAMER_ROOT)"\
+	set SPWPATH "$(SPACEWIRE_ROOT)"\
+	source $(STREAMER_ROOT)/astral.compile.tcl \
+	source $(SPACEWIRE_ROOT)/astr_compile.tcl' $@
 	echo 'vlog "$(CHS_ROOT)/target/sim/src/elfloader.cpp" -ccflags "-std=c++11"' >> $@
 	echo 'vopt $(VOPT_FLAGS) $(TBENCH) -o $(TBENCH)_opt' >> $@
 
@@ -85,7 +100,7 @@ car-vsim-sim-build: $(CAR_VSIM_DIR)/compile.carfield_soc.tcl
 .PHONY: car-vsim-sim-clean
 ## Remove all Questasim simulation build artifacts
 car-vsim-sim-clean:
-	rm -rf $(CAR_VSIM_DIR)/uart $(CAR_VSIM_DIR)/FETCH* $(CAR_VSIM_DIR)/logs $(CAR_VSIM_DIR)/*.ini $(CAR_VSIM_DIR)/trace* $(CAR_VSIM_DIR)/*.wlf $(CAR_VSIM_DIR)/transcript $(CAR_VSIM_DIR)/work
+	rm -rf $(CAR_VSIM_DIR)/uart $(CAR_VSIM_DIR)/FETCH* $(CAR_VSIM_DIR)/logs $(CAR_VSIM_DIR)/*.ini $(CAR_VSIM_DIR)/trace* $(CAR_VSIM_DIR)/*.wlf $(CAR_VSIM_DIR)/transcript $(CAR_VSIM_DIR)/work $(CAR_VSIM_DIR)/*lib $(CAR_VSIM_DIR)/*Lib $(CAR_VSIM_DIR)/*.vstf $(CAR_VSIM_DIR)/*.log $(CAR_VSIM_DIR)/*.txt
 
 .PHONY: car-vsim-sim-run
 ## Run simulation of the carfield RTL.
@@ -103,7 +118,7 @@ car-vsim-sim-clean:
 ## @param PULPD_BOOTMODE=0 The bootmode of safe domain <0 JTAG|1 Serial Link>
 ## @param SPATZD_BINARY==<path_to_elf> ELF to be executed on integer PMCA
 ## @param SPATZD_BOOTMODE=0 The bootmode of safe domain <0 JTAG|1 Serial Link>
-## @param TESTBENCH=tb_carfield_soc_opt The optimised toplevel testbench to use. Defaults to 'tb_carfield_soc_opt'.
+## @param TESTBENCH=tb_astral_opt The optimised toplevel testbench to use. Defaults to 'tb_astral_opt'.
 ## @param VSIM_FLAGS The flags for the vsim invocation
 car-vsim-sim-run:
 	$(eval CHS_BINARY_ABS := $(realpath $(CHS_BINARY)))
@@ -115,6 +130,7 @@ car-vsim-sim-run:
 	$(eval SPATZD_BINARY_ABS := $(realpath $(SPATZD_BINARY)))
 	cd $(CAR_VSIM_DIR); $(QUESTA) vsim $(VSIM_FLAGS) -do \
 		"set HYP_USER_PRELOAD $(HYP_USER_PRELOAD); \
+		 set BYPASS_PLL $(BYPASS_PLL); \
 		 set SECURE_BOOT $(SECURE_BOOT); \
 		 set CHS_BOOTMODE $(CHS_BOOTMODE); \
 		 set CHS_PRELMODE $(CHS_PRELMODE); \

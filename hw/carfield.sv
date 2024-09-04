@@ -43,6 +43,8 @@ module carfield
   input   logic                                       periph_clk_i,
   // accelerator and island clock
   input   logic                                       alt_clk_i,
+  // secure domain clock
+  input   logic                                       secd_clk_i,
   // external reference clock for timers (CLINT, islands)
   input   logic                                       rt_clk_i,
 
@@ -142,6 +144,26 @@ module carfield
   output logic [HypNumPhys-1:0][7:0]                  hyper_dq_o,
   output logic [HypNumPhys-1:0]                       hyper_dq_oe_o,
   output logic [HypNumPhys-1:0]                       hyper_reset_no,
+  // TCTM Interface
+  input  logic                                        tc_active_i,
+  input  logic                                        tc_clock_i,
+  input  logic                                        tc_data_i,
+  output logic                                        ptme_clk_o,
+  output logic                                        ptme_enc_o,
+  output logic                                        ptme_sync_o,
+  input  logic                                        ptme_ext_clk_i,
+  output logic [2:0]                                  hpc_addr_o,
+  output logic                                        hpc_cmd_en_o,
+  output logic                                        hpc_sample_o,
+  output logic [1:0]                                  llc_line_o,
+  input  logic                                        obt_ext_clk_i,
+  input  logic                                        obt_pps_in_i,
+  output logic                                        obt_sync_out_o,
+  // SpW Interface
+  input  logic                                        spw_data_i,
+  input  logic                                        spw_strb_i,
+  output logic                                        spw_data_o,
+  output logic                                        spw_strb_o,
 `ifdef GEN_NO_HYPERBUS
   // LLC interface
   output logic [LlcArWidth-1:0] llc_ar_data,
@@ -501,11 +523,13 @@ end
 
 // Clock Multiplexing for each sub block
 localparam int unsigned DomainClkDivValueWidth = 24;
+// One FLL is for the RT clock which does not go through the MUX.
+localparam int unsigned ClkMuxNumInputs = carfield_pkg::NumFll-1;
 typedef logic [DomainClkDivValueWidth-1:0] domain_clk_div_value_t;
 logic [NumDomains-1:0] domain_clk;
 logic [NumDomains-1:0] domain_clk_en;
 logic [NumDomains-1:0] domain_clk_gated;
-logic [NumDomains-1:0][1:0] domain_clk_sel;
+logic [NumDomains-1:0][$clog2(ClkMuxNumInputs)-1:0] domain_clk_sel;
 
 logic [NumDomains-1:0] domain_clk_div_changed;
 logic [NumDomains-1:0] domain_clk_div_decoupled_valid, domain_clk_div_decoupled_ready;
@@ -533,14 +557,14 @@ logic [NumDomains-1:0] rsts_n;
 
 for (genvar i = 0; i < NumDomains; i++) begin : gen_domain_clock_mux
   clk_mux_glitch_free #(
-    .NUM_INPUTS(3)
+    .NUM_INPUTS(carfield_pkg::NumFll-1)
   ) i_clk_mux (
-    .clks_i       ( {periph_clk_i, alt_clk_i, host_clk_i} ),
-    .test_clk_i   ( 1'b0                                  ),
-    .test_en_i    ( 1'b0                                  ),
-    .async_rstn_i ( host_pwr_on_rst_n                     ),
-    .async_sel_i  ( domain_clk_sel[i]                     ),
-    .clk_o        ( domain_clk[i]                         )
+    .clks_i       ( {secd_clk_i, periph_clk_i, alt_clk_i, host_clk_i} ),
+    .test_clk_i   ( 1'b0                                              ),
+    .test_en_i    ( 1'b0                                              ),
+    .async_rstn_i ( host_pwr_on_rst_n                                 ),
+    .async_sel_i  ( domain_clk_sel[i]                                 ),
+    .clk_o        ( domain_clk[i]                                     )
   );
 
   // The register file does not support back pressure directly. I.e the hardware side cannot tell
@@ -1356,7 +1380,7 @@ localparam pulp_cluster_package::pulp_cluster_cfg_t PulpClusterCfg = '{
   DmaNumOutstandingBursts: 8,
   DmaBurstLength: 256,
   NumMstPeriphs: 1,
-  NumSlvPeriphs: 11,
+  NumSlvPeriphs: 12,
   ClusterAlias: 1,
   ClusterAliasBase: 'h0,
   NumSyncStages: 3,
@@ -1656,10 +1680,14 @@ if (CarfieldIslandsCfg.spatz.enable) begin : gen_spatz_cluster
   assign spatzcl_mbox_intr = hostd_spatzcl_mbox_intr_ored | safed_spatzcl_mbox_intr;
   // verilog_lint: waive-stop line-length
 end else begin : gen_no_spatz_cluster
+  assign spatzcl_mbox_intr = '0;
+  assign spatzcl_timer_intr = '0;
   assign car_regs_hw2reg.spatz_cluster_isolate_status.d = 1'b0;
   assign car_regs_hw2reg.spatz_cluster_isolate_status.de = 1'b0;
   assign car_regs_hw2reg.spatz_cluster_busy.d = '0;
   assign car_regs_hw2reg.spatz_cluster_busy.de = 1'b0;
+  assign safed_spatzcl_mbox_intr = '0;
+  assign hostd_spatzcl_mbox_intr = '0;
   assign spatzcl_hostd_mbox_intr = '0;
   assign spatzcl_safed_mbox_intr = '0;
   assign spatz_rst_n = '0;
@@ -1939,11 +1967,11 @@ mailbox_unit #(
 );
 
 // Carfield peripherals
+logic eth_clk;
 if (CarfieldIslandsCfg.ethernet.enable) begin : gen_ethernet
   localparam int unsigned EthAsyncIdx = CarfieldRegBusSlvIdx.ethernet-NumSyncRegSlv;
   localparam int unsigned EthDivWidth = 20;
   localparam int unsigned DefaultEthClkDivValue = 1;
-  logic eth_clk;
   logic eth_clk_decoupled_valid, eth_clk_decoupled_ready;
 
   assign ethernet_isolate_req = car_regs_reg2hw.periph_isolate.q;
@@ -1960,6 +1988,17 @@ if (CarfieldIslandsCfg.ethernet.enable) begin : gen_ethernet
     .data_o  ( ),
     .busy_o  ( )
   );
+  // The Ethernet RGMII interfaces mandates a clock of 125MHz (in 1GBit mode) for both TX and RX
+  // clocks. We generate a 125MHz clock starting from the `periph_clk`. The (integer) division value
+  // is SW-programmable.
+  localparam int unsigned EthRgmiiPhyClkDivWidth = 20;
+  // We assume a peripheral clock of 250MHz to get the 125MHz clock for the RGMII interface. Hence,
+  // the default division value after PoR is 250/125.
+  localparam int unsigned EthRgmiiPhyClkDivDefaultValue = 2;
+  logic [EthRgmiiPhyClkDivWidth-1:0] eth_rgmii_phy_clk_div_value;
+  logic                     eth_rgmii_phy_clk_div_value_valid;
+  logic                     eth_rgmii_phy_clk_div_value_ready;
+  logic                     eth_rgmii_phy_clk0;
 
   clk_int_div #(
     .DIV_VALUE_WIDTH ( EthDivWidth ),
@@ -2050,6 +2089,7 @@ if (CarfieldIslandsCfg.ethernet.enable) begin : gen_ethernet
     .eth_rx_irq_o            ( car_eth_rx_intr                         )
   );
 end else begin : gen_no_ethernet
+  assign eth_clk                 = '0;
   assign ethernet_isolate_req    = '0;
   assign car_eth_rx_intr         = '0;
   assign eth_md_o                = '0;
@@ -2455,6 +2495,308 @@ if (CarfieldIslandsCfg.periph.enable) begin: gen_periph // Handle with care...
     assign can_tx_o = '0;
     assign apb_mst_rsp[CanIdx] = '0;
   end
+
+  // Telemetry and Telecomand IP (Streamer)
+  if (carfield_configuration::StreamerEnable) begin: gen_streamer
+    localparam int unsigned ZeroBits = Cfg.AddrWidth - AxiNarrowAddrWidth;
+    localparam int unsigned StreamerDivisionValueWidth = 6; // Divide up to 63
+    localparam int unsigned NrStreamerApbSlaves = 2; // 0: APB2Reg; 1: APB
+    logic [Cfg.AddrWidth-1:0] mask_address;
+    logic streamer_clk;
+    logic streamer_clk_decoupled_valid, streamer_clk_decoupled_ready;
+    logic streamer_apb_demux_sel;
+    logic [StreamerDivisionValueWidth-1:0] streamer_clk_div_value;
+
+    carfield_apb_req_t apb_async_req;
+    carfield_apb_rsp_t apb_async_rsp;
+
+    carfield_apb_req_t [NrStreamerApbSlaves-1:0] apb_streamer_req;
+    carfield_apb_rsp_t [NrStreamerApbSlaves-1:0] apb_streamer_rsp;
+
+    lossy_valid_to_stream #(
+      .T ( logic[StreamerDivisionValueWidth-1:0] )
+    ) i_streamer_decouple (
+      .clk_i   ( periph_clk ),
+      .rst_ni  ( periph_pwr_on_rst_n ),
+      .valid_i ( car_regs_reg2hw.streamer_clk_div_value.qe ),
+      .data_i  ( car_regs_reg2hw.streamer_clk_div_value.q ),
+      .valid_o ( streamer_clk_decoupled_valid ),
+      .ready_i ( streamer_clk_decoupled_ready ),
+      .data_o  ( streamer_clk_div_value ),
+      .busy_o  ( )
+    );
+
+    clk_int_div #(
+      .DIV_VALUE_WIDTH(StreamerDivisionValueWidth),
+      .DEFAULT_DIV_VALUE(1),
+      .ENABLE_CLOCK_IN_RESET(1)
+    ) i_streamer_clk_div (
+      .clk_i          ( periph_clk ),
+      .rst_ni         ( periph_pwr_on_rst_n ),
+      .en_i           ( car_regs_reg2hw.streamer_clk_div_enable.q ),
+      .test_mode_en_i ( test_mode_i ),
+      .div_i          ( streamer_clk_div_value ),
+      .div_valid_i    ( streamer_clk_decoupled_valid ),
+      .div_ready_o    ( streamer_clk_decoupled_ready ),
+      .clk_o          ( streamer_clk ),
+      .cycl_count_o   (              )
+    );
+
+    REG_BUS #(
+      .ADDR_WIDTH ( AxiNarrowAddrWidth ),
+      .DATA_WIDTH ( AxiNarrowDataWidth )
+    ) reg_bus_streamer ( streamer_clk );
+
+    (* no_ungroup *)
+    (* no_boundary_optimization *)
+    apb_cdc #(
+      .LogDepth ( LogDepth ),
+      .req_t  ( carfield_apb_req_t ),
+      .resp_t ( carfield_apb_rsp_t ),
+      .addr_t ( car_nar_addrw_t    ),
+      .data_t ( car_nar_dataw_t    ),
+      .strb_t ( car_nar_strb_t     )
+    ) i_streamer_apb_cdc (
+      .src_pclk_i    ( periph_clk ),
+      .src_preset_ni ( periph_pwr_on_rst_n ),
+      .src_req_i     ( apb_mst_req[StreamerIdx] ),
+      .src_resp_o    ( apb_mst_rsp[StreamerIdx] ),
+      .dst_pclk_i    ( streamer_clk ),
+      .dst_preset_ni ( periph_pwr_on_rst_n ),
+      .dst_req_o     ( apb_async_req ),
+      .dst_resp_i    ( apb_async_rsp )
+    );
+
+    assign streamer_apb_demux_sel =
+    (apb_async_req.paddr < carfield_configuration::StreamerApbBase) ? 'h0 : 'h1;
+
+    apb_demux #(
+      .NoMstPorts ( NrStreamerApbSlaves ),
+      .req_t      ( carfield_apb_req_t  ),
+      .resp_t     ( carfield_apb_rsp_t  )
+    ) i_streamer_apb_demux (
+      .slv_req_i  ( apb_async_req ),
+      .slv_resp_o ( apb_async_rsp ),
+      .mst_req_o  ( apb_streamer_req ),
+      .mst_resp_i ( apb_streamer_rsp ),
+      .select_i   ( streamer_apb_demux_sel )
+    );
+
+    apb_to_reg i_streamer_apb_to_reg (
+      .clk_i     ( streamer_clk             ),
+      .rst_ni    ( periph_pwr_on_rst_n      ),
+      .penable_i ( apb_streamer_req[0].penable ),
+      .pwrite_i  ( apb_streamer_req[0].pwrite  ),
+      .paddr_i   ( apb_streamer_req[0].paddr   ),
+      .psel_i    ( apb_streamer_req[0].psel    ),
+      .pwdata_i  ( apb_streamer_req[0].pwdata  ),
+      .prdata_o  ( apb_streamer_rsp[0].prdata  ),
+      .pready_o  ( apb_streamer_rsp[0].pready  ),
+      .pslverr_o ( apb_streamer_rsp[0].pslverr ),
+      .reg_o     ( reg_bus_streamer         )
+    );
+
+    assign reg_bus_streamer.error = '0;
+    assign mask_address = {{ZeroBits{1'b0}}, reg_bus_streamer.addr};
+
+    TASI_top i_tctm_streamer (
+      .SYS_CLK                            (streamer_clk),
+      .ASYNC_RST_N                        (periph_rst_n),
+      .APB_PADD                           (apb_streamer_req[1].paddr),   // : in
+      .APB_PENABLE                        (apb_streamer_req[1].penable), // : in
+      .APB_PPROT                          (3'b0),                        // : in
+      .APB_PSEL                           (apb_streamer_req[1].psel),    // : in
+      .APB_PSTROBE                        (4'b1111),                     // : in
+      .APB_PWDATA                         (apb_streamer_req[1].pwdata),  // : in
+      .APB_PWRITE                         (apb_streamer_req[1].pwrite),  // : in
+      .APB_PRDATA                         (apb_streamer_rsp[1].prdata),  // : out
+      .APB_PREADY                         (apb_streamer_rsp[1].pready),  // : out
+      .APB_PSLVERR                        (apb_streamer_rsp[1].pslverr), // : out
+      .REG_ADDR                           (mask_address), // : in
+      .REG_M_ID                           (3'b001), // : in
+      .REG_VALID                          (reg_bus_streamer.valid), // : in
+      .REG_WDATA                          (reg_bus_streamer.wdata), // : in
+      .REG_WRITE                          (reg_bus_streamer.write), // : in
+      .REG_RDATA                          (reg_bus_streamer.rdata), // : out
+      .REG_READY                          (reg_bus_streamer.ready), // : out
+      .AUEND_SDU                          (1'b0), // : in
+      .AUR_SDU                            (1'b0), // : in
+      .BIT_LOCKn                          (3'b0), // : in
+      .CLCW_C_B                           (1'b0), // : in
+      .CLCW_S_B                           (1'b0), // : in
+      .CONF_REG_ACC_ACK                   (1'b1), // : in
+      .CPDU_INPROGRESS                    (1'b0), // : in
+      .EXT_OBT_CLK                        (obt_ext_clk_i), // : in
+      .INT_PPS_IN                         (obt_pps_in_i), // : in
+      .RFAVN                              (1'b0), // : in
+      .SDU_WRONG_LENGTH                   (1'b0), // : in
+      .SYNC_RST_N                         (1'b1), // : in
+      .TC_ACTIVE                          (tc_active_i), // : in
+      .TC_CLOCK                           (tc_clock_i), // : in
+      .TC_DATA                            (tc_data_i), // : in
+      .TME_CLCW_FSR_DAT_FROM_REM_PDEC_SEC (1'b0), // : in
+      .TME_ENCR_UNENC_CLK                 (1'b0), // : in
+      .TME_ENCR_UNENC_OUT                 (1'b0), // : in
+      .TME_ENCR_UNENC_SYNC                (1'b0), // : in
+      .TME_EXT_CLK                        (ptme_ext_clk_i), // : in
+      .TME_FSR_DAT_FROM_LOC_SEC           (1'b0), // : in
+      .ANACOND_LLC_RESET                  (/* Not Connected */), // : out
+      .AUTH_SEL                           (/* Not Connected */), // : out
+      .BUSY                               (/* Not Connected */), // : out
+
+      .CADUFrameMark                      (/* Not Connected */), // : out
+      .CLCWD_B                            (/* Not Connected */), // : out
+      .CONF_REG_ACC_REQ                   (/* Not Connected */), // : out
+
+      .CONF_REG_ADDR_OFFSET               (/* Not Connected */), // : out
+
+      .CONF_REG_GROUP_ADDR                (/* Not Connected */), // : out
+
+      .CONF_REG_WDATA                     (/* Not Connected */), // : out
+
+      .CROSSED_LCL_RESET                  (/* Not Connected */), // : out
+      .CROSSED_POWER_REARM_OUT            (llc_line_o[1]), // : out
+      .CROSSED_RESET_OUT                  (/* Not Connected */), // : out
+      .FPEMO                              (/* Not Connected */), // : out
+      .FPRELM                             (/* Not Connected */), // : out
+      .GENERAL_INTERRUPT                  (car_regs_hw2reg.streamer_general_irq.d), // : out
+      .HPC_ADDR                           (hpc_addr_o), // : out
+      .HPC_CMD_EN                         (hpc_cmd_en_o), // : out
+      .HPC_INTERRUPT_SOURCES              (/* Not Connected */), // : out
+      .HPC_PROTECTIONn                    (/* Not Connected */), // : out
+      .HPC_SMP                            (hpc_sample_o), // : out
+      .INH_MMA                            (/* Not Connected */), // : out
+      .LLC_INTERRUPT_SOURCES              (/* Not Connected */), // : out
+      .LLC_IRQ_FORCE_REGISTER             (/* Not Connected */), // : out
+      .LOC_AOCS_LCL_PRI_BUS_ON_OFFn       (/* Not Connected */), // : out
+      .LOC_AOCS_ON_OFFn                   (/* Not Connected */), // : out
+      .LOC_HK_ON_OFFn                     (/* Not Connected */), // : out
+      .LOC_IO_ON_OFFn                     (/* Not Connected */), // : out
+      .LOC_MCPM_ON_OFFn                   (/* Not Connected */), // : out
+      .LOC_MCPM_RESET                     (llc_line_o[0]), // : out
+      .LVDS_IF_TME_ENC_IOUT               (/* Not Connected */), // : out
+      .LVDS_IF_TME_ENC_IQCLK              (/* Not Connected */), // : out
+      .LVDS_IF_TME_ENC_QOUT               (/* Not Connected */), // : out
+      .PP0Busy_N                          (/* Not Connected */), // : out
+      //.PP1Busy_N                          (/* Not Connected */), // : out
+      .PP2Busy_N                          (/* Not Connected */), // : out
+      .PP3Busy_N                          (/* Not Connected */), // : out
+      .PP4Busy_N                          (/* Not Connected */), // : out
+      .PP5Busy_N                          (/* Not Connected */), // : out
+      .PP6Busy_N                          (/* Not Connected */), // : out
+      .PPS_OUT                            (/* Not Connected */), // : out
+      .REM_AOCS_LCL_PRI_BUS_ON_OFFn       (/* Not Connected */), // : out
+      .REM_AOCS_ON_OFFn                   (/* Not Connected */), // : out
+      .REM_HK_ON_OFFn                     (/* Not Connected */), // : out
+      .REM_IO_ON_OFFn                     (/* Not Connected */), // : out
+      .REM_MCPM_ON_OFFn                   (/* Not Connected */), // : out
+      .RM_RECOVERY_RESET                  (/* Not Connected */), // : out
+      .RM_RESET                           (/* Not Connected */), // : out
+      .RS422_IF_TME_ENC_CLK               (ptme_clk_o), // : out
+      .RS422_IF_TME_ENC_OUT               (ptme_enc_o), // : out
+      .RS422_IF_TME_ENC_SYNC              (ptme_sync_o), // : out
+      .SYNC_TO_EXT_IF                     (obt_sync_out_o), // : out
+      .TC_ONDOING                         (/* Not Connected */), // : out
+      .TC_STANDARD                        (/* Not Connected */), // : out
+      .TME_CLR_UNENC_CLK                  (/* Not Connected */), // : out
+      .TME_CLR_UNENC_EODF_TO_ADAM         (/* Not Connected */), // : out
+      .TME_CLR_UNENC_EODF_TO_EXT          (/* Not Connected */), // : out
+      .TME_CLR_UNENC_OUT                  (/* Not Connected */), // : out
+      .TME_CLR_UNENC_SYNC                 (/* Not Connected */), // : out
+      .TME_Cn_S                           (/* Not Connected */), // : out
+      .TME_REM_CLCWn_FSR_SEL              (/* Not Connected */), // : out
+      .TME_TIME_STROBE_TO_REM_OBT         (/* Not Connected */), // : out
+      .TME_UNENC_SYNC                     (/* Not Connected */)  // : out
+    );
+
+    assign car_regs_hw2reg.streamer_general_irq.de = '1;
+  end else begin: gen_no_streamer
+    assign car_regs_hw2reg.streamer_general_irq.de = '0;
+    assign car_regs_hw2reg.streamer_general_irq.d = '0;
+  end
+
+  // SpaceWire IP
+  if (carfield_configuration::SpaceWireEnable) begin: gen_spw
+
+    localparam int unsigned SpWZeroBits = Cfg.AddrWidth - AxiNarrowAddrWidth;
+    localparam int unsigned NrSpaceWireApbSlaves = 2; // 0: APB2Reg; 1: APB
+    logic spw_apb_demux_sel;
+    logic [Cfg.AddrWidth-1:0] spw_address;
+
+    carfield_apb_req_t [NrSpaceWireApbSlaves-1:0] apb_spw_req;
+    carfield_apb_rsp_t [NrSpaceWireApbSlaves-1:0] apb_spw_rsp;
+
+    REG_BUS #(
+      .ADDR_WIDTH ( AxiNarrowAddrWidth ),
+      .DATA_WIDTH ( AxiNarrowDataWidth )
+    ) reg_bus_spw ( periph_clk );
+
+    assign spw_apb_demux_sel =
+    (apb_mst_req[SpaceWireIdx].paddr < carfield_configuration::SpaceWireApbBase) ? 'h0 : 'h1;
+
+    apb_demux #(
+      .NoMstPorts ( NrSpaceWireApbSlaves ),
+      .req_t      ( carfield_apb_req_t   ),
+      .resp_t     ( carfield_apb_rsp_t   )
+    ) i_spw_apb_demux (
+      .slv_req_i  ( apb_mst_req[SpaceWireIdx] ),
+      .slv_resp_o ( apb_mst_rsp[SpaceWireIdx] ),
+      .mst_req_o  ( apb_spw_req ),
+      .mst_resp_i ( apb_spw_rsp ),
+      .select_i   ( spw_apb_demux_sel )
+    );
+
+    apb_to_reg i_spw_apb_to_reg (
+      .clk_i     ( periph_clk             ),
+      .rst_ni    ( periph_rst_n           ),
+      .penable_i ( apb_spw_req[0].penable ),
+      .pwrite_i  ( apb_spw_req[0].pwrite  ),
+      .paddr_i   ( apb_spw_req[0].paddr   ),
+      .psel_i    ( apb_spw_req[0].psel    ),
+      .pwdata_i  ( apb_spw_req[0].pwdata  ),
+      .prdata_o  ( apb_spw_rsp[0].prdata  ),
+      .pready_o  ( apb_spw_rsp[0].pready  ),
+      .pslverr_o ( apb_spw_rsp[0].pslverr ),
+      .reg_o     ( reg_bus_spw            )
+    );
+
+    assign reg_bus_spw.error = '0;
+
+    assign spw_address = {{SpWZeroBits{1'b0}}, reg_bus_spw.addr};
+
+    spw_astr_top i_spacewire (
+      .ASYNC_RSTN           (periph_rst_n),
+      .SYNC_RSTN            (periph_rst_n),
+      .SYS_CLK              (periph_clk),
+      .SPW_DATA_IN          (spw_data_i),
+      .SPW_STROBE_IN        (spw_strb_i),
+      .SPW_DATA_OUT         (spw_data_o),
+      .SPW_STROBE_OUT       (spw_strb_o),
+      .REG_ADDR_i           (spw_address),
+      .REG_VALID_i          (reg_bus_spw.valid),
+      .REG_WDATA_i          (reg_bus_spw.wdata),
+      .REG_WRITE_i          (reg_bus_spw.write),
+      .REG_RDATA_o          (reg_bus_spw.rdata),
+      .REG_READY_o          (reg_bus_spw.ready),
+      .APB_PADD             (apb_spw_req[1].paddr),
+      .APB_PSEL             (apb_spw_req[1].psel),
+      .APB_PENABLE          (apb_spw_req[1].penable),
+      .APB_PWDATA           (apb_spw_req[1].pwdata),
+      .APB_PWRITE           (apb_spw_req[1].pwrite),
+      .APB_PRDATA           (apb_spw_rsp[1].prdata),
+      .APB_PREADY           (apb_spw_rsp[1].pready),
+      .APB_PSLVERR          (apb_spw_rsp[1].pslverr),
+      .GENERAL_INTERRUPT_o  (car_regs_hw2reg.spw_general_irq.d)
+   );
+   assign car_regs_hw2reg.spw_general_irq.de = '1;
+
+  end else begin: gen_no_spw
+    assign spw_data_o = '0;
+    assign spw_strb_o = '0;
+    assign car_regs_hw2reg.spw_general_irq.d = '0;
+    assign car_regs_hw2reg.spw_general_irq.de = '0;
+  end
+
 end else begin: gen_no_periph
   assign car_regs_hw2reg.periph_isolate_status.d = '0;
   assign car_regs_hw2reg.periph_isolate_status.de = '0;

@@ -8,12 +8,15 @@
 #include "car_memory_map.h"
 #include "io.h"
 #include "sw/device/lib/dif/dif_rv_plic.h"
+#include "regs/system_timer.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include "params.h"
 #include "printf.h"
 #include "util.h"
+#include "padframe.h"
+#include "fll.h"
 
 static dif_rv_plic_t plic0;
 
@@ -46,10 +49,22 @@ static dif_rv_plic_t plic0;
 #define L2_TX_BASE 0x78000000
 #define L2_RX_BASE 0x78001000
 
+#define FLL_WAIT_CYCLES 10000
+
 int main(void) {
 
   // Put SMP Hart to sleep
   if (hart_id() != 0) wfi();
+
+  // Configure padframe for ethernet use.
+  padframe_ethernet_cfg();
+
+  // Setup the peripheral FLL to work at 500 MHz
+  set_periph_fll_div2(500 /* MHz */);
+
+  // Wait for FLL clk out to stabilize
+  for (int i = 0; i < FLL_WAIT_CYCLES; i++)
+    asm volatile("addi x0, x0, 0" ::);
 
   int prio = 0x1;
   bool t;
@@ -92,11 +107,11 @@ int main(void) {
   // DMA Source Address
   *reg32(CAR_ETHERNET_BASE_ADDR, IDMA_SRC_ADDR_OFFSET)  = L2_TX_BASE;
   // DMA Destination Address
-  *reg32(CAR_ETHERNET_BASE_ADDR, IDMA_DST_ADDR_OFFSET)  = 0x0;
+  *reg32(CAR_ETHERNET_BASE_ADDR, IDMA_DST_ADDR_OFFSET)  = 0x14000000;
   // Data length
   *reg32(CAR_ETHERNET_BASE_ADDR, IDMA_LENGTH_OFFSET)    = DATA_CHUNK*BYTE_SIZE;
   // Source Protocol
-  *reg32(CAR_ETHERNET_BASE_ADDR, IDMA_SRC_PROTO_OFFSET) = 0x0;
+  *reg32(CAR_ETHERNET_BASE_ADDR, IDMA_SRC_PROTO_OFFSET) = 0x5;
   // Destination Protocol
   *reg32(CAR_ETHERNET_BASE_ADDR, IDMA_DST_PROTO_OFFSET) = 0x5;
 
