@@ -421,10 +421,10 @@ packages:
     - idma
     - register_interface
   pulp_cluster:
-    revision: 07988cd01c359a81804820135927bc04da3c25cd
+    revision: 72de8c16d575692dd1ea4ed54500e4a730e44364
     version: null
     source:
-      Git: https://github.com/pulp-platform/pulp_cluster.git
+      Git: https://github.com/Lynx005F/pulp_cluster.git
     dependencies:
     - axi
     - axi2mem
