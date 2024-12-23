@@ -245,13 +245,14 @@ packages:
     dependencies:
     - common_cells
   fpnew:
-    revision: a8e0cba6dd50f357ece73c2c955d96efc3c6c315
+    revision: 9ae365eed4d35a5f24ee03b6d28e8736691049ed
     version: null
     source:
-      Git: https://github.com/pulp-platform/cvfpu.git
+      Git: https://github.com/Lynx005F/cvfpu.git
     dependencies:
     - common_cells
     - fpu_div_sqrt_mvp
+    - redundancy_cells
   fpu_div_sqrt_mvp:
     revision: 86e1f558b3c95e91577c41b2fc452c86b04e85ac
     version: 1.0.4
@@ -259,11 +260,19 @@ packages:
       Git: https://github.com/pulp-platform/fpu_div_sqrt_mvp.git
     dependencies:
     - common_cells
-  hci:
-    revision: 38fc2a7eea7978df52434e66ee04a40788fd86b7
+  fpu_interco:
+    revision: da2758151bf48b27a6086f5ecb5ea0195c45d94b
     version: null
     source:
-      Git: https://github.com/pulp-platform/hci.git
+      Git: https://github.com/Lynx005F/fpu_interco
+    dependencies:
+    - fpnew
+    - riscv
+  hci:
+    revision: 1af613191246df6a91789b8b6ca77c3c54b256b5
+    version: null
+    source:
+      Git: https://github.com/Lynx005F/hci.git
     dependencies:
     - cluster_interconnect
     - common_cells
@@ -284,17 +293,17 @@ packages:
     - scm
     - tech_cells_generic
   hwpe-ctrl:
-    revision: a5966201aeeb988d607accdc55da933a53c6a56e
+    revision: 376c5da312d60cecd732336d23a0d0da2a1d0ea2
     version: null
     source:
-      Git: https://github.com/pulp-platform/hwpe-ctrl.git
+      Git: https://github.com/Lynx005F/hwpe-ctrl.git
     dependencies:
     - tech_cells_generic
   hwpe-stream:
-    revision: 65c99a4a2f37a79acee800ab0151f67dfb1edef1
-    version: 1.8.0
+    revision: a39dd676f7f4594910306dfcd190ef0ff94e4381
+    version: null
     source:
-      Git: https://github.com/pulp-platform/hwpe-stream.git
+      Git: https://github.com/Lynx005F/hwpe-stream.git
     dependencies:
     - tech_cells_generic
   hyperbus:
@@ -421,10 +430,10 @@ packages:
     - idma
     - register_interface
   pulp_cluster:
-    revision: 07988cd01c359a81804820135927bc04da3c25cd
+    revision: a8bfab1471ef962ad79754813eeaad8b487715ff
     version: null
     source:
-      Git: https://github.com/pulp-platform/pulp_cluster.git
+      Git: https://github.com/Lynx005F/pulp_cluster.git
     dependencies:
     - axi
     - axi2mem
@@ -435,6 +444,7 @@ packages:
     - common_cells
     - cv32e40p
     - event_unit_flex
+    - fpu_interco
     - hci
     - hier-icache
     - ibex
@@ -451,10 +461,10 @@ packages:
     - tech_cells_generic
     - timer_unit
   redmule:
-    revision: 9223ccc932e21d0667e9c2d30831db41eec9299e
+    revision: e0ad39ad49e7e71f2cfade0de0f8b18cfcd65165
     version: null
     source:
-      Git: https://github.com/pulp-platform/redmule.git
+      Git: https://github.com/Lynx005F/redmule.git
     dependencies:
     - common_cells
     - cv32e40p
@@ -462,13 +472,14 @@ packages:
     - hci
     - hwpe-ctrl
     - hwpe-stream
+    - redundancy_cells
     - register_interface
     - tech_cells_generic
   redundancy_cells:
-    revision: 9e31f7c6c24877eaf58279903e7a162b16c9a721
+    revision: 2c74b0f912f8a03a1458a7ec0b598c2ca03e889b
     version: null
     source:
-      Git: https://github.com/pulp-platform/redundancy_cells.git
+      Git: https://github.com/Lynx005F/redundancy_cells.git
     dependencies:
     - common_cells
     - common_verification
@@ -485,10 +496,10 @@ packages:
     - common_cells
     - common_verification
   riscv:
-    revision: c760db14dbd6cc3ec3b8ae8274df2eac7225bcac
+    revision: 8d721be2445d7ae0d4b96a0cd84064116b6d4836
     version: null
     source:
-      Git: https://github.com/AlSaqr-platform/riscv_nn.git
+      Git: https://github.com/Lynx005F/riscv_nn.git
     dependencies:
     - fpnew
     - tech_cells_generic
@@ -547,10 +558,10 @@ packages:
     - common_cells
     - register_interface
   softex:
-    revision: 23faeccaf204817bc9e6649e469072e5726be561
-    version: 1.0.0
+    revision: 88345b1a9aff72858a4fd237d3486995d4114e4c
+    version: null
     source:
-      Git: https://github.com/belanoa/softex.git
+      Git: https://github.com/Lynx005F/softex.git
     dependencies:
     - common_cells
     - fpnew
