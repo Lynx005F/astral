@@ -259,6 +259,14 @@ packages:
       Git: https://github.com/pulp-platform/fpu_div_sqrt_mvp.git
     dependencies:
     - common_cells
+  fpu_interco:
+    revision: b5f7a315929308823cacd81e1e4898f1eeecfc64
+    version: null
+    source:
+      Git: https://github.com/pulp-platform/fpu_interco
+    dependencies:
+    - fpnew
+    - riscv
   hci:
     revision: 38fc2a7eea7978df52434e66ee04a40788fd86b7
     version: null
@@ -421,10 +429,10 @@ packages:
     - idma
     - register_interface
   pulp_cluster:
-    revision: 07988cd01c359a81804820135927bc04da3c25cd
+    revision: 85fb4df13abf9cd0af02e5af213f59900e3b8c38
     version: null
     source:
-      Git: https://github.com/pulp-platform/pulp_cluster.git
+      Git: https://github.com/Lynx005F/pulp_cluster.git
     dependencies:
     - axi
     - axi2mem
@@ -435,6 +443,7 @@ packages:
     - common_cells
     - cv32e40p
     - event_unit_flex
+    - fpu_interco
     - hci
     - hier-icache
     - ibex
@@ -485,10 +494,10 @@ packages:
     - common_cells
     - common_verification
   riscv:
-    revision: c760db14dbd6cc3ec3b8ae8274df2eac7225bcac
+    revision: 8d721be2445d7ae0d4b96a0cd84064116b6d4836
     version: null
     source:
-      Git: https://github.com/AlSaqr-platform/riscv_nn.git
+      Git: https://github.com/Lynx005F/riscv_nn.git
     dependencies:
     - fpnew
     - tech_cells_generic

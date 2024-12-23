@@ -21,3 +21,4 @@ overrides:
   register_interface:   { git: "https://github.com/pulp-platform/register_interface.git"  , version: 0.4.4                                  }
   common_cells:         { git: "https://github.com/pulp-platform/common_cells.git"        , version: 1.37.0                                 } # branch: master
   riscv-iommu:          { git: "https://github.com/zero-day-labs/riscv-iommu.git"         , rev: c1dea3732d0d05e5659b31773e43f3364bc866fc   } # branch: pulp
+  riscv:                { git: "https://github.com/Lynx005F/riscv_nn.git"                 , rev: 8d721be2445d7ae0d4b96a0cd84064116b6d4836   } # branch: itemm/latency_override
