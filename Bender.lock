@@ -429,7 +429,7 @@ packages:
     - idma
     - register_interface
   pulp_cluster:
-    revision: 85fb4df13abf9cd0af02e5af213f59900e3b8c38
+    revision: a1c71ae2d36d582a963be31387a3c002eaf1a00c
     version: null
     source:
       Git: https://github.com/Lynx005F/pulp_cluster.git
@@ -494,7 +494,7 @@ packages:
     - common_cells
     - common_verification
   riscv:
-    revision: 8d721be2445d7ae0d4b96a0cd84064116b6d4836
+    revision: 376714b79df4ae8ecdb036bab7f32d1f3d3ca156
     version: null
     source:
       Git: https://github.com/Lynx005F/riscv_nn.git
