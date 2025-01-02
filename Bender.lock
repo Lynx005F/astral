@@ -261,7 +261,7 @@ packages:
     dependencies:
     - common_cells
   fpu_interco:
-    revision: da2758151bf48b27a6086f5ecb5ea0195c45d94b
+    revision: a84529343e61ff0e3d2869f2888c14c6a46bd360
     version: null
     source:
       Git: https://github.com/Lynx005F/fpu_interco
@@ -430,7 +430,7 @@ packages:
     - idma
     - register_interface
   pulp_cluster:
-    revision: a8bfab1471ef962ad79754813eeaad8b487715ff
+    revision: a3c4ddfa9981150aaae6d1e77a2c9a9419f3b677
     version: null
     source:
       Git: https://github.com/Lynx005F/pulp_cluster.git
@@ -496,7 +496,7 @@ packages:
     - common_cells
     - common_verification
   riscv:
-    revision: 8d721be2445d7ae0d4b96a0cd84064116b6d4836
+    revision: 7c736eb1bdabbfed4f08058499437b2e095ad2b7
     version: null
     source:
       Git: https://github.com/Lynx005F/riscv_nn.git

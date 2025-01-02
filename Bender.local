@@ -19,12 +19,12 @@ overrides:
   register_interface:   { git: "https://github.com/pulp-platform/register_interface.git"  , version: 0.4.4                                  }
   common_cells:         { git: "https://github.com/pulp-platform/common_cells.git"        , version: 1.37.0                                 } # branch: master
   riscv-iommu:          { git: "https://github.com/zero-day-labs/riscv-iommu.git"         , rev: c1dea3732d0d05e5659b31773e43f3364bc866fc   } # branch: pulp
-  riscv:                { git: "https://github.com/Lynx005F/riscv_nn.git"                 , rev: 8d721be2445d7ae0d4b96a0cd84064116b6d4836   } # branch: itemm/apu_lat_override
+  riscv:                { git: "https://github.com/Lynx005F/riscv_nn.git"                 , rev: 7c736eb1bdabbfed4f08058499437b2e095ad2b7   } # branch: itemm/apu_lat_override
   hci:                  { git: "https://github.com/Lynx005F/hci.git"                      , rev: 1af613191246df6a91789b8b6ca77c3c54b256b5   } # branch: itemm/fpr_features
   redundancy_cells:     { git: "https://github.com/Lynx005F/redundancy_cells.git"         , rev: 2c74b0f912f8a03a1458a7ec0b598c2ca03e889b   } # branch: itemm/fpr_features
   redmule:              { git: "https://github.com/Lynx005F/redmule.git"                  , rev: e0ad39ad49e7e71f2cfade0de0f8b18cfcd65165   } # branch: itemm/fpr_synthesis
   softex:               { git: "https://github.com/Lynx005F/softex.git"                   , rev: 88345b1a9aff72858a4fd237d3486995d4114e4c   } # branch: itemm/fpnew_changes
-  fpu_interco:          { git: "https://github.com/Lynx005F/fpu_interco"                  , rev: da2758151bf48b27a6086f5ecb5ea0195c45d94b   } # branch: itemm/core_redundancy
+  fpu_interco:          { git: "https://github.com/Lynx005F/fpu_interco"                  , rev: a84529343e61ff0e3d2869f2888c14c6a46bd360   } # branch: itemm/core_redundancy
   hwpe-stream:          { git: "https://github.com/Lynx005F/hwpe-stream.git"              , rev: a39dd676f7f4594910306dfcd190ef0ff94e4381   } # branch: itemm/redmule_features
   hwpe-ctrl:            { git: "https://github.com/Lynx005F/hwpe-ctrl.git"                , rev: 376c5da312d60cecd732336d23a0d0da2a1d0ea2   } # branch: itemm/redmule_features
   fpnew:                { git: "https://github.com/Lynx005F/cvfpu.git"                    , rev: 9ae365eed4d35a5f24ee03b6d28e8736691049ed   } # branch: itemm/dev
