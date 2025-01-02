@@ -21,4 +21,4 @@ overrides:
   register_interface:   { git: "https://github.com/pulp-platform/register_interface.git"  , version: 0.4.4                                  }
   common_cells:         { git: "https://github.com/pulp-platform/common_cells.git"        , version: 1.37.0                                 } # branch: master
   riscv-iommu:          { git: "https://github.com/zero-day-labs/riscv-iommu.git"         , rev: c1dea3732d0d05e5659b31773e43f3364bc866fc   } # branch: pulp
-  riscv:                { git: "https://github.com/Lynx005F/riscv_nn.git"                 , rev: 376714b79df4ae8ecdb036bab7f32d1f3d3ca156   } # branch: itemm/fpu_extrareg
+  riscv:                { git: "https://github.com/Lynx005F/riscv_nn.git"                 , rev: e0b6ea63afafd600b9cd6ed790ef99d5e815b0e3   } # branch: itemm/no_vectorial
