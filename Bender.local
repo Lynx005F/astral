@@ -19,7 +19,7 @@ overrides:
   register_interface:   { git: "https://github.com/pulp-platform/register_interface.git"  , version: 0.4.4                                  }
   common_cells:         { git: "https://github.com/pulp-platform/common_cells.git"        , version: 1.37.0                                 } # branch: master
   riscv-iommu:          { git: "https://github.com/zero-day-labs/riscv-iommu.git"         , rev: c1dea3732d0d05e5659b31773e43f3364bc866fc   } # branch: pulp
-  riscv:                { git: "https://github.com/Lynx005F/riscv_nn.git"                 , rev: 7c736eb1bdabbfed4f08058499437b2e095ad2b7   } # branch: itemm/apu_lat_override
+  riscv:                { git: "https://github.com/Lynx005F/riscv_nn.git"                 , rev: 376714b79df4ae8ecdb036bab7f32d1f3d3ca156   } # Override for repository only, branch should match pulp_cluster Bender.lock
   hci:                  { git: "https://github.com/Lynx005F/hci.git"                      , rev: 1af613191246df6a91789b8b6ca77c3c54b256b5   } # branch: itemm/fpr_features
   redundancy_cells:     { git: "https://github.com/Lynx005F/redundancy_cells.git"         , rev: 2c74b0f912f8a03a1458a7ec0b598c2ca03e889b   } # branch: itemm/fpr_features
   redmule:              { git: "https://github.com/Lynx005F/redmule.git"                  , rev: e0ad39ad49e7e71f2cfade0de0f8b18cfcd65165   } # branch: itemm/fpr_synthesis
